@@ -1,0 +1,19 @@
+---
+layout: post
+title:  "CRDT json - collaborative editing without central server"
+---
+
+# Collaborative editing without central server
+[Serverless collaboration][serverless-collab]
+> Browsers can connect to eachother over a network without a central server using WebRTC, of which there is a nice example here.
+
+[Automerge project][automerge]
+> Automerge is a so-called Conflict-Free Replicated Data Type (CRDT), which allows concurrent changes on different devices to be merged automatically without requiring any central server. It is based on [academic research on JSON CRDTs][academic-research], but the details of the algorithm in Automerge are different from the JSON CRDT paper, and we are planning to publish more detail about it in the future.
+
+# Research
+[academic research - "A Conflict-Free Replicated JSON Datatype"][academic-research]
+> Many applications model their data in a general-purpose storage format such as JSON. This data structure is modified by the application as a result of user input. Such modifications are well understood if performed sequentially on a single copy of the data, but if the data is replicated and modified concurrently on multiple devices, it is unclear what the semantics should be. In this paper we present an algorithm and formal semantics for a JSON data structure that automatically resolves concurrent modifications such that no updates are lost, and such that all replicas converge towards the same state (a conflict-free replicated datatype or CRDT). It supports arbitrarily nested list and map types, which can be modified by insertion, deletion and assignment. The algorithm performs all merging client-side and does not depend on ordering guarantees from the network, making it suitable for deployment on mobile devices with poor network connectivity, in peer-to-peer networks, and in messaging systems with end-to-end encryption.
+
+[serverless-collab]: https://thegeez.net/2019/03/03/serverless_collab.html
+[academic-research]: https://arxiv.org/abs/1608.03960
+[automerge]: https://github.com/automerge/automerge
