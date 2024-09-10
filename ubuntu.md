@@ -24,45 +24,44 @@ sudo locale-gen
 ```
 
 ```bash
-useradd -m alex
-passwd alex
+useradd -m NNN
+passwd XXX
 groupadd wheel
-usermod -aG wheel alex
+usermod -aG wheel NNN
 apt install sudo
 
 vim /etc/sudoers
 %wheel ALL=(ALL) NOPASSWD:ALL
 ```
 
-# Caps lock up esc
+# Caps lock <-> esc
 
 ```bash
 sudo apt install gnome-tweaks
-tweak-tool
+gnome-tweaks
 ```
 
 - Open tweak-tool and click on the *Keyboard & Mouse* section in the left menu bar.
 - Click on the *Additional Layout Options* button on the left.
-- Under *Caps Lock behavior* select *Caps Lock is also a Ctrl*.
+- Under *Caps Lock behavior* select *Swap Esc and CapsLock*.
 
-# gcc asan problems
+# asan problems
 
-https://askubuntu.com/questions/1500017/ubuntu-22-04-default-gcc-version-does-not-match-version-that-built-latest-defaul
+## asan fix (turn off addr randomize)
+<https://stackoverflow.com/questions/5194666/disable-randomization-of-memory-addresses/5194709#5194709>
+<https://stackoverflow.com/questions/77894856/possible-bug-in-gcc-sanitizers>
+
+```bash
+echo 0 | sudo tee  /proc/sys/kernel/randomize_va_space
+```
+
+## asan gcc problems
+
+<https://askubuntu.com/questions/1500017/ubuntu-22-04-default-gcc-version-does-not-match-version-that-built-latest-defaul>
 
 ```bash
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 1
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 1
-```
-
-https://stackoverflow.com/questions/77826203/addresssanitizer-randomly-throws-sigsegv-with-no-explanation
-
-## asan fix
-
-https://stackoverflow.com/questions/5194666/disable-randomization-of-memory-addresses/5194709#5194709
-https://stackoverflow.com/questions/77894856/possible-bug-in-gcc-sanitizers
-
-```bash
-echo 0 | sudo tee  /proc/sys/kernel/randomize_va_space
 ```
 
 # bpftrace fix
@@ -71,15 +70,17 @@ Error: `Could not resolve symbol: /proc/self/exe:BEGIN_trigger`
 
 Fix: install debug symbols
 
-https://ubuntu.com/server/docs/debug-symbol-packages
+<https://ubuntu.com/server/docs/debug-symbol-packages>
 
 ```bash
 sudo apt install bpftrace-dbgsym
 ```
 
-# docker compose 2
+# docker
 
-https://proghunter.ru/articles/installing-docker-compose-v2-on-ubuntu
+## docker compose 2
+
+<https://proghunter.ru/articles/installing-docker-compose-v2-on-ubuntu>
 
 ```bash
 mkdir -p ~/.docker/cli-plugins/
@@ -87,7 +88,7 @@ curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-comp
 chmod +x ~/.docker/cli-plugins/docker-compose
 ```
 
-# debian:jessie
+## docker debian:jessie repos
 
 ```bash
   echo deb [trusted=yes] http://archive.debian.org/debian jessie main > sources.list
