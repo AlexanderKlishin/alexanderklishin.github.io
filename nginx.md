@@ -11,10 +11,12 @@ title: Nginx
 
 <https://nginx.org/en/docs/http/ngx_http_rewrite_module.html>
 
+### directives
 - break
 - if
 - return
 - rewrite
+  <https://blog.nginx.org/blog/creating-nginx-rewrite-rules>
 - rewrite_log
 - set
 - uninitialized_variable_warn
@@ -89,8 +91,6 @@ cat /proc/sys/kernel/core_pattern
 ```
 
 # Test
-
-## **Test::Nginx**
 
 ### doc
 
