@@ -7,7 +7,7 @@ title: Nginx
 
 <https://www.freecodecamp.org/news/the-nginx-handbook/>
 
-## **http_rewrite**
+## http_rewrite
 
 <https://nginx.org/en/docs/http/ngx_http_rewrite_module.html>
 
@@ -27,6 +27,16 @@ Syntax:	return code [text];
         return URL;
 ```
 
+## http_headers
+
+https://nginx.org/en/docs/http/ngx_http_headers_module.html
+
+### directives
+
+- add_header
+- add_trailer
+- expires
+
 ## http_proxy
 
 <https://nginx.org/ru/docs/http/ngx_http_proxy_module.html>
@@ -41,7 +51,32 @@ Syntax:	return code [text];
 
 <https://nginx.org/en/docs/dev/development_guide.html>
 
-- Phases: <https://nginx.org/en/docs/dev/development_guide.html#http_phases>
+## phases
+
+<https://nginx.org/en/docs/dev/development_guide.html#http_phases>
+
+- NGX_HTTP_POST_READ_PHASE
+- NGX_HTTP_SERVER_REWRITE_PHASE
+- NGX_HTTP_FIND_CONFIG_PHASE
+- NGX_HTTP_REWRITE_PHASE
+- NGX_HTTP_POST_REWRITE_PHASE
+- NGX_HTTP_PREACCESS_PHASE
+- NGX_HTTP_ACCESS_PHASE
+
+    <https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy>
+    > The client must pass handlers registered at this phase.
+    > Satisfy directive permits to continue if any handlers authorizes the client.
+
+- NGX_HTTP_POST_ACCESS_PHASE
+- NGX_HTTP_PRECONTENT_PHASE
+
+    > modules: try_files mirror
+
+- NGX_HTTP_CONTENT_PHASE
+
+    > modules called sequentially until one of them produces the output
+
+- NGX_HTTP_LOG_PHASE
 
 ## module
 
