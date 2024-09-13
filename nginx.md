@@ -63,20 +63,35 @@ https://nginx.org/en/docs/http/ngx_http_headers_module.html
 - NGX_HTTP_PREACCESS_PHASE
 - NGX_HTTP_ACCESS_PHASE
 
+    > handler: any return code other than NGX_OK, NGX_DECLINED, NGX_AGAIN, NGX_DONE is considered a denial
+
     <https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy>
     > The client must pass handlers registered at this phase.
     > Satisfy directive permits to continue if any handlers authorizes the client.
-
 - NGX_HTTP_POST_ACCESS_PHASE
 - NGX_HTTP_PRECONTENT_PHASE
 
     > modules: try_files mirror
-
 - NGX_HTTP_CONTENT_PHASE
 
     > modules called sequentially until one of them produces the output
-
 - NGX_HTTP_LOG_PHASE
+
+### handler return codes
+
+- NGX_OK
+
+    Proceed to the next phase.
+- NGX_DECLINED
+
+    Proceed to the next handler of the current phase.
+    If the current handler is the last in the current phase, move to the next phase.
+- NGX_AGAIN, NGX_DONE
+
+    Suspend phase handling until some future event which can be an asynchronous I/O operation or just a delay, for example. It is assumed, that phase handling will be resumed later by calling ngx_http_core_run_phases().
+- other
+
+    Any other value returned by the phase handler is treated as a request finalization code, in particular, an HTTP response code. The request is finalized with the code provided.
 
 ## module
 
