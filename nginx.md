@@ -7,6 +7,10 @@ title: Nginx
 
 <https://www.freecodecamp.org/news/the-nginx-handbook/>
 
+## vars
+
+<https://nginx.org/en/docs/varindex.html>
+
 ## http_rewrite
 
 <https://nginx.org/en/docs/http/ngx_http_rewrite_module.html>
@@ -29,7 +33,7 @@ Syntax:	return code [text];
 
 ## http_headers
 
-https://nginx.org/en/docs/http/ngx_http_headers_module.html
+<https://nginx.org/en/docs/http/ngx_http_headers_module.html>
 
 ### directives
 
