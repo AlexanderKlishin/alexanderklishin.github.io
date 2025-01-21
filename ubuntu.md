@@ -105,3 +105,12 @@ $ virt-install --virt-type kvm --name debian-11 --cdrom  ~/Downloads/debian-11.1
 $ virsh list --all
 $ sudo virt-manager
 ```
+
+# face recognition
+https://askubuntu.com/questions/1199014/change-login-manager-with-face-recognition
+
+sudo add-apt-repository ppa:boltgolt/howdy
+sudo apt update
+sudo apt install howdy
+
+sudo howdy add
