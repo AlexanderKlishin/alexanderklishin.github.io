@@ -186,3 +186,126 @@ events {
     worker_connections 1024;
 }
 ```
+
+# init
+
+```C
+/* nginx/src/core/nginx.c */
+int main(int argc, char *const *argv) {
+    cycle = ngx_init_cycle(&init_cycle);
+
+    if (ngx_process == NGX_PROCESS_SINGLE) {
+        ngx_single_process_cycle(cycle);
+    } else {
+        ngx_master_process_cycle(cycle);
+    }
+}
+
+/* nginx/src/core/ngx_cycle.c */
+ngx_cycle_t *ngx_init_cycle(ngx_cycle_t *old_cycle) {
+    ...
+    for (i = 0; cycle->modules[i]; i++) {
+        if (cycle->modules[i]->type != NGX_CORE_MODULE) {
+            continue;
+        }
+        module->create_conf(cycle) /* create core module conf */
+    }
+
+    ngx_conf_parse(&conf, &cycle->conf_file)
+
+    for (i = 0; cycle->modules[i]; i++) {
+        if (cycle->modules[i]->type != NGX_CORE_MODULE) {
+            continue;
+        }
+        module->init_conf(cycle) /* init core module cond */
+    }
+
+    /* create shared memory */
+    for (i = 0; /* void */ ; i++) {
+        ngx_shm_alloc(&shm_zone[i].shm)
+        shm_zone[i].init(&shm_zone[i], data)
+    }
+
+    ngx_init_modules(cycle) /* cycle->modules[i]->init_module(cycle) */
+
+    /* free old shared memory */
+    for (i = 0; /* void */ ; i++) {
+        ngx_shm_free(&oshm_zone[i].shm);
+    }
+}
+
+/* nginx/src/os/unix/ngx_process_cycle.c */
+void ngx_master_process_cycle(ngx_cycle_t *cycle) {
+    ngx_start_worker_processes(cycle, ccf->worker_processes, NGX_PROCESS_RESPAWN);
+}
+
+void ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type) {
+    for (i = 0; i < n; i++) {
+        ngx_spawn_process(cycle, ngx_worker_process_cycle, ...);
+    }
+}
+
+void ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data) {
+        ngx_worker_process_init(cycle, worker);
+}
+
+void ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker) {
+
+    if (geteuid() == 0) {
+        setgid(ccf->group)
+        setuid(ccf->user)
+    }
+
+    if (ccf->working_directory.len) {
+        chdir((char *) ccf->working_directory.data)
+    }
+
+    for (i = 0; cycle->modules[i]; i++) {
+        cycle->modules[i]->init_process(cycle)
+    }
+}
+
+```
+
+# http client
+
+```C
+/* nginx/src/http/ngx_http_request.c */
+
+void ngx_http_init_connection(ngx_connection_t *c) {
+    rev = c->read;
+    rev->handler = ngx_http_wait_request_handler;
+    c->write->handler = ngx_http_empty_handler;
+}
+
+void ngx_http_wait_request_handler(ngx_event_t *rev) {
+    c->data = ngx_http_create_request(c);
+
+    rev->handler = ngx_http_process_request_line;
+    ngx_http_process_request_line(rev);
+}
+
+void ngx_http_process_request_line(ngx_event_t *rev) {
+            rev->handler = ngx_http_process_request_headers;
+            ngx_http_process_request_headers(rev);
+}
+
+void ngx_http_process_request_headers(ngx_event_t *rev) {
+            ngx_http_process_request(r);
+}
+
+void ngx_http_process_request(ngx_http_request_t *r) {
+    c->read->handler = ngx_http_request_handler;
+    c->write->handler = ngx_http_request_handler;
+    r->read_event_handler = ngx_http_block_reading;
+
+    ngx_http_handler(r);
+}
+
+/* nginx/src/http/ngx_http_core_module.c */
+
+void ngx_http_handler(ngx_http_request_t *r) {
+    r->write_event_handler = ngx_http_core_run_phases;
+    ngx_http_core_run_phases(r);
+}
+```
