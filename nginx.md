@@ -267,6 +267,102 @@ void ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker) {
 
 ```
 
+# init http
+```
+/* nginx/src/http/ngx_http.c */
+static ngx_command_t  ngx_http_commands[] = {
+    { ngx_string("http"), NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_http_block, 0, 0, NULL },
+
+static char *ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
+    ctx->main_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    for (m = 0; cf->cycle->modules[m]; m++) {
+        if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) { continue; }
+        ctx->main_conf[mi] = module->create_main_conf(cf);
+        ctx->srv_conf[mi] = module->create_srv_conf(cf);
+        ctx->loc_conf[mi] = module->create_loc_conf(cf);
+    }
+
+    for (m = 0; cf->cycle->modules[m]; m++) {
+        if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) { continue; }
+        module->preconfiguration(cf)
+    }
+
+    rv = ngx_conf_parse(cf, NULL);
+
+    for (m = 0; cf->cycle->modules[m]; m++) {
+        if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) { continue; }
+
+        module->init_main_conf(cf, ctx->main_conf[mi]);
+
+        /* !!! merge servers, location conf */
+        ngx_http_merge_servers(cf, cmcf, module, mi);
+    }
+
+    for (m = 0; cf->cycle->modules[m]; m++) {
+        if (cf->cycle->modules[m]->type != NGX_HTTP_MODULE) { continue; }
+
+        module->postconfiguration(cf)
+    }
+
+}
+
+/* nginx/src/http/ngx_http_core_module.c */
+static ngx_command_t  ngx_http_core_commands[] = {
+    { ngx_string("server"), NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_http_core_server, 0, 0, NULL },
+
+    { ngx_string("location"),
+      NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE12,
+      ngx_http_core_location, NGX_HTTP_SRV_CONF_OFFSET, 0, NULL },
+
+    { ngx_string("limit_except"), NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
+      ngx_http_core_limit_except, NGX_HTTP_LOC_CONF_OFFSET, 0, NULL },
+
+char * ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy) {
+    ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
+    ctx->main_conf = http_ctx->main_conf;
+    ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    for (i = 0; cf->cycle->modules[i]; i++) {
+        if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) { continue; }
+        module->create_srv_conf(cf);
+        module->create_loc_conf(cf);
+    }
+
+    rv = ngx_conf_parse(cf, NULL);
+}
+
+char * ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy) {
+    ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
+    pctx = cf->ctx;
+    ctx->main_conf = pctx->main_conf;
+    ctx->srv_conf = pctx->srv_conf;
+    ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    for (i = 0; cf->cycle->modules[i]; i++) {
+        if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) { continue; }
+        module->create_loc_conf(cf);
+    }
+
+    rv = ngx_conf_parse(cf, NULL);
+}
+
+char * ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
+    pctx = cf->ctx;
+    ctx->main_conf = pctx->main_conf;
+    ctx->srv_conf = pctx->srv_conf;
+
+    for (i = 0; cf->cycle->modules[i]; i++) {
+        if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) { continue; }
+        module->create_loc_conf(cf);
+    }
+}
+```
+
 # http client
 
 ```C
@@ -308,4 +404,114 @@ void ngx_http_handler(ngx_http_request_t *r) {
     r->write_event_handler = ngx_http_core_run_phases;
     ngx_http_core_run_phases(r);
 }
+```
+
+# http upstream
+
+```C
+/* nginx/src/http/modules/ngx_http_proxy_module.c */
+
+static char *ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    if (plcf->upstream.upstream || plcf->proxy_lengths) {
+        return "is duplicate";
+    }
+
+    if (n) {
+            ngx_http_script_compile(&sc)
+        return NGX_CONF_OK;
+    }
+
+    u.url.len = url->len - add;
+    u.url.data = url->data + add;
+    plcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
+}
+
+static ngx_int_t ngx_http_proxy_handler(ngx_http_request_t *r) {
+    ngx_http_upstream_t         *u;
+
+    ngx_http_upstream_create(r)
+
+    ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_proxy_ctx_t));
+    ngx_http_set_ctx(r, ctx, ngx_http_proxy_module);
+
+    u = r->upstream;
+
+    if (plcf->proxy_lengths == NULL) {
+        ctx->vars = plcf->vars;
+    } else {
+            ngx_http_proxy_eval(r, ctx, plcf)
+
+    u->conf = &plcf->upstream;
+
+    ngx_http_read_client_request_body(r, ngx_http_upstream_init)
+
+}
+```
+
+```C
+/* nginx/src/http/ngx_http_upstream.h */
+typedef struct {
+
+    ngx_uint_t                       next_upstream;
+} ngx_http_upstream_conf_t;
+```
+
+```C
+/* nginx/src/http/ngx_http_upstream.c */
+
+void ngx_http_upstream_init(ngx_http_request_t *r) {
+}
+
+static void ngx_http_upstream_init_request(ngx_http_request_t *r) {
+
+        uscf = ngx_http_upstream_rbtree_lookup(umcf, host);
+
+    uscf->peer.init(r, uscf)
+
+}
+
+static void
+ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u) {
+
+        ngx_http_upstream_next(r, u, NGX_HTTP_UPSTREAM_FT_TIMEOUT);
+
+        ngx_http_upstream_next(r, u, NGX_HTTP_UPSTREAM_FT_ERROR);
+
+            ngx_http_upstream_next(r, u, NGX_HTTP_UPSTREAM_FT_ERROR);
+
+        ngx_http_upstream_next(r, u, NGX_HTTP_UPSTREAM_FT_INVALID_HEADER);
+
+    if (u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE) {
+        ngx_http_upstream_test_next(r, u)
+
+}
+
+static ngx_int_t
+ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u) {
+
+            ngx_http_upstream_next(r, u, un->mask);
+
+}
+
+static void
+ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u,
+                       ngx_uint_t ft_type) {
+
+    ngx_http_upstream_connect(r, u);
+}
+
+static void
+ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
+{
+    rc = ngx_event_connect_peer(&u->peer);
+    /* {
+        rc = pc->get(pc, pc->data);
+        if (rc != NGX_OK) {
+            return rc;
+    }*/
+
+    }
+
+}
+
 ```
