@@ -440,12 +440,25 @@ static ngx_int_t ngx_http_proxy_handler(ngx_http_request_t *r) {
         ctx->vars = plcf->vars;
     } else {
             ngx_http_proxy_eval(r, ctx, plcf)
-
+    }
     u->conf = &plcf->upstream;
 
-    ngx_http_read_client_request_body(r, ngx_http_upstream_init)
+    u->create_request = ngx_http_proxy_create_request;
+    u->reinit_request = ngx_http_proxy_reinit_request;
+    u->process_header = ngx_http_proxy_process_status_line;
+    u->abort_request = ngx_http_proxy_abort_request;
+    u->finalize_request = ngx_http_proxy_finalize_request;
 
+    ngx_http_read_client_request_body(r, ngx_http_upstream_init)
 }
+
+static ngx_int_t ngx_http_proxy_eval(ngx_http_request_t *r,
+    ngx_http_proxy_ctx_t *ctx, ngx_http_proxy_loc_conf_t *plcf) {
+
+    u->resolved = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_resolved_t));
+    ...
+}
+
 ```
 
 ```C
@@ -460,18 +473,24 @@ typedef struct {
 /* nginx/src/http/ngx_http_upstream.c */
 
 void ngx_http_upstream_init(ngx_http_request_t *r) {
+    ngx_http_upstream_init_request(r);
 }
 
-static void ngx_http_upstream_init_request(ngx_http_request_t *r) {
+void ngx_http_upstream_init_request(ngx_http_request_t *r) {
+    u = r->upstream;
 
+    u->create_request(r)
+
+    if (u->resolved == NULL) {
+        uscf = u->conf->upstream;
+    } else {
         uscf = ngx_http_upstream_rbtree_lookup(umcf, host);
+    }
 
     uscf->peer.init(r, uscf)
-
 }
 
-static void
-ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u) {
+void ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u) {
 
         ngx_http_upstream_next(r, u, NGX_HTTP_UPSTREAM_FT_TIMEOUT);
 

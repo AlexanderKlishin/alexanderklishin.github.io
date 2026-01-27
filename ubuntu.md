@@ -107,10 +107,16 @@ $ sudo virt-manager
 ```
 
 # face recognition
+## old
 https://askubuntu.com/questions/1199014/change-login-manager-with-face-recognition
 
 sudo add-apt-repository ppa:boltgolt/howdy
 sudo apt update
 sudo apt install howdy
-
 sudo howdy add
+
+## 24.02
+https://ubuntuhandbook.org/index.php/2024/10/howdy-ubuntu-2404/
+
+sudo add-apt-repository ppa:ubuntuhandbook1/howdy
+
