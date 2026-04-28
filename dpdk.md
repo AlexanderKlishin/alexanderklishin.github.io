@@ -7,6 +7,8 @@ dpdk-test --in-memory
 
 dpdk-test --in-memory --vdev=net_ring0 --vdev=net_ring1
 
+# i
+## [habr virt](https://habr.com/ru/companies/flant/articles/751746/)
 # Qs
 ## make
 * needs many vars
