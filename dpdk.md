@@ -1,16 +1,17 @@
 # dpdk
-## [EAL parameters](https://doc.dpdk.org/guides/linux_gsg/linux_eal_parameters.html)
-## run without root
+## refs
+* [guides](https://doc.dpdk.org/guides/)
+* [nics](https://doc.dpdk.org/guides/nics/)
+    * [ring](https://doc.dpdk.org/guides/nics/ring.html)
+* [Getting Started: 9. eal parameters](https://doc.dpdk.org/guides/linux_gsg/linux_eal_parameters.html)
+    * run without root
+```
 dpdk-test --in-memory
-## vdev
-[net_ring](https://doc.dpdk.org/guides/nics/ring.html)
-
 dpdk-test --in-memory --vdev=net_ring0 --vdev=net_ring1
-
-## [nics](https://doc.dpdk.org/guides/nics/)
-
+```
 # i
-## [habr virt](https://habr.com/ru/companies/flant/articles/751746/)
+* [habr virt](https://habr.com/ru/companies/flant/articles/751746/)
+
 # Qs
 ## make
 * needs many vars
